@@ -1,0 +1,19 @@
+---
+MOUNTS:
+  MOUNT1:
+    disklist: /dev/sdb
+    vgname: vgapp1
+    lvname: lvapp1
+    lvsize: +100%FREE
+    username: test1
+    groupname: test1
+    mountpoint: /app1
+  MOUNT2:
+    disklist: /dev/sdc
+    vgname: vgapp2
+    lvname: lvapp2
+    lvsize: 5G
+    username: test2
+    groupname: test2
+    mountpoint: /app2
+    fstab_opts: default
