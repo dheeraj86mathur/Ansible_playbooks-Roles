@@ -1,0 +1,38 @@
+---
+###############################################################################################
+##usage: ansible-playbook nicinfo.yml -e "varfile=sample_vmlist"                              #
+##Output will be saved in csv format in /opt/ansible/tempout/{{ VMNAME_dvs_ports }}           #
+## Created By: Dheeraj Mathur                                                                 #
+## Created On: 31th Aug 2020                                                                  #
+## Version: 1.0                                                                               #
+###############################################################################################
+
+- name: This playbook will fetch MAC and VLAN details for all nics on a VM
+  hosts: localhost
+  gather_facts: no
+  vars_prompt:
+    - name: "vcenter"
+      prompt: "Please Key-in Vcenter FQDN: "
+      private: no
+    - name: "user"
+      prompt: "Please key-in your LAN-ID: "
+      private: no
+    - name: "pass"
+      prompt: "Please key-in your LAN-ID password: "
+      unsafe: yes
+      private: yes
+#  vars_files: /opt/ansible/playbook/vcenter_vars.yml
+  vars:
+    - validate_certs: no
+    - debug_flag: no
+    - vcenter_server: "{{ vcenter }}"
+    - vcenter_user: "{{ user }}"
+    - vcenter_pass: "{{ pass }}"
+
+  vars_files: "{{ varfile }}"
+  tasks:
+   - name: Calling vm_getmacinfo.yml
+     include_tasks: vm_getmacinfo.yml
+     loop: "{{ VMlist }}"
+     loop_control:
+       loop_var: vmname
