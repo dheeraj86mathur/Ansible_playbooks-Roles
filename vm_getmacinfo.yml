@@ -1,0 +1,111 @@
+---
+    - name: Find a VM
+      vmware_guest_find:
+       hostname: "{{ vcenter_server }}"
+       username: "{{ vcenter_user }}"
+       password: "{{ vcenter_pass }}"
+       validate_certs: no
+       name: "{{ vmname|upper }}"
+      delegate_to: localhost
+      register: vmpath
+   # - debug:
+   #    msg: "{{ vmpath.folders }}"
+    - set_fact:
+       VMfolder: "{{ vmpath.folders }}"
+       dc: "{{ vmpath.folders | regex_replace('(PDC|SDC)') }}"
+
+    - name: Gather facts for a VM
+      vmware_guest_facts:
+       hostname: "{{ vcenter_server }}"
+       username: "{{ vcenter_user }}"
+       password: "{{ vcenter_pass }}"
+       validate_certs: no
+       datacenter: "{{ dc }}"
+       name: "{{ vmname|upper }}"
+       folder: "{{ VMfolder }}"
+      register: vm_facts
+
+    - set_fact:
+       nics: "{{ vm_facts.instance.hw_interfaces }}"
+
+    - set_fact:
+       nic_macs_{{ nic_item }}: "{{ vm_facts['instance']['hw_'+nic_item]['macaddress'] }}"
+       nic_portgroup_key_{{ nic_item }}: "{{ vm_facts['instance']['hw_'+nic_item ]['portgroup_key'] }}"
+      loop: "{{ nics }}"
+      loop_control:
+        loop_var: nic_item
+
+#    - debug:
+#       var: nic_macs_{{ item }},nic_portgroup_key_{{ item }}
+#      loop: "{{ nics }}"
+
+    - name: Login into vCenter
+      uri:
+       url: https://{{ vcenter_server }}/rest/com/vmware/cis/session
+       force_basic_auth: yes
+       validate_certs: "{{ validate_certs }}"
+       method: POST
+       user: "{{ vcenter_user }}"
+       password: "{{ vcenter_pass }}"
+      register: login
+
+    - name: Get ports from vCenter
+      uri:
+       url: https://{{ vcenter_server }}/rest/vcenter/network?filter.networks={{ vm_facts['instance']['hw_'+nic_item ]['portgroup_key'] }}
+       force_basic_auth: yes
+       validate_certs: "{{ validate_certs }}"
+       return_content: yes
+       headers:
+         Cookie: "{{ login.set_cookie }}"
+      register: dvs_ports
+      loop: "{{ nics }}"
+      loop_control:
+        loop_var: nic_item
+
+#    - name: Print names of Ports in the given vCenter
+#      debug:
+#       msg: "{{ dvsp_item.json['value'][0]['name'] }}"
+#      loop: "{{ dvs_ports.results }}"
+#      loop_control:
+#        loop_var: dvsp_item
+#
+    - name: Clear existing output file for same VM
+      file:
+        name: "/tmp/tempouts/{{ vmname|upper }}_dvs_ports"
+        state: absent
+
+    - name: Copy the ports info to a file
+      blockinfile:
+       block: |
+         {{ dvsp_item.nic_item }}{{ dvsp_item.json['value'][0]['name'] }}
+       path: "/tmp/tempouts/{{ vmname|upper }}_dvs_ports"
+       create: yes
+       mode: 0644
+       owner: root
+       group: root
+       marker_begin: "## BEGIN {{ dvsp_item.nic_item }} ##"
+       marker_end: "## END {{ dvsp_item.nic_item }} ##"
+      loop: "{{ dvs_ports.results }}"
+      loop_control:
+        loop_var: dvsp_item
+
+    - name: Add MAC address to output file
+      replace:
+       path: "/tmp/tempouts/{{ vmname|upper }}_dvs_ports"
+       regexp: "{{ nic_item }}"
+       replace: "{{ nic_item }},{{ vm_facts['instance']['hw_'+nic_item]['macaddress'] }},"
+      loop: "{{ nics }}"
+      loop_control:
+        loop_var: nic_item
+
+    - name: remove extra lines from output file
+      lineinfile:
+        path: "/tmp/tempouts/{{ vmname|upper }}_dvs_ports"
+        regex: "#"
+        state: absent
+
+    - name: Insert header in output file
+      lineinfile:
+        path: "/tmp/tempouts/{{ vmname|upper }}_dvs_ports"
+        line: "#NIC,HWADDR,VLAN"
+        insertbefore: BOF
