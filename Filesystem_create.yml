@@ -1,0 +1,41 @@
+---
+###############################################################################################
+## Name: Filesystem_create.yml                                                                #
+## Purpose: Create Linux filesystems                                                          #
+## Usage with Mandatory minimal Options only:                                                 #
+## ansible-playbook Filesystem_create.yml -e "target=<TARGET_Server/Group> varfile=xxxx"                 #
+## Sample variable file for new filesystem details /opt/ansible/playbook/sample_fslist        #
+## Customizable Parameters:                                                                   #
+## vgname, disklist, lvsize, lvname, mountpoint, username, groupname, fstab_options           #
+## The size of the logical volume, according to lvcreate(8) --size, by default in megabytes   #
+## or optionally with one of [bBsSkKmMgGtTpPeE] units; or according to lvcreate(8) --extents  #
+## as a percentage of [VG|PVS|FREE]; Float values must begin with a digit.                    #
+## Defined Default values :                                                                   #
+#username: root                                                                               #
+#groupname: root                                                                              #
+## Created By: Dheeraj Mathur                                                                 #
+## Created On: 4th May 2020                                                                   #
+## Approved By:                                                                               #
+## Approved on:                                                                               #
+## Version: 1.0                                                                               #
+###############################################################################################
+
+ - name: filesystems creation
+   hosts: "{{ target }}"
+   gather_facts: yes
+   vars_files: "{{ varfile }}"
+   tasks:
+     - name: Calling the Task to create multiple filesystem
+       include_tasks:
+         file: filesystem_tasks.yml
+       vars:
+         vgname: "{{ MOUNTS[item]['vgname'] }}"
+         lvname: "{{ MOUNTS[item]['lvname'] }}"
+         lvsize: "{{ MOUNTS[item]['lvsize'] }}"
+         mountpoint: "{{ MOUNTS[item]['mountpoint'] }}"
+         fstab_opts: "{{ MOUNTS[item]['fstab_opts'] | default(omit) }}"
+         disklist: "{{ MOUNTS[item]['disklist'] }}"
+         username: "{{ MOUNTS[item]['username'] }}"
+         groupname: "{{ MOUNTS[item]['groupname'] }}"
+       loop: "{{ MOUNTS.keys()|flatten(levels=1) }}"
+       register: addfs
