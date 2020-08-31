@@ -1,0 +1,41 @@
+---
+ - name: Create or resize a volume group on top of disklist, which is comma seperated /dev/sdX device list
+   lvg:
+    vg: "{{ vgname }}"
+    pvs: "{{ disklist }}"
+
+ - name: Create logical volume and vg if needed
+   lvol:
+    vg: "{{ vgname }}"
+    lv: "{{ lvname }}"
+    state: present
+    size: "{{ lvsize }}"
+    pvs: "{{ disklist | default(omit) }}"
+    resizefs: "{{ growfs | default(omit) }}"
+
+ - name: Create a xfs filesystem on lv device
+   filesystem:
+    fstype: xfs
+    dev: "/dev/mapper/{{ vgname }}-{{ lvname }}"
+
+ - name: Create a mount point directory if it does not exist
+   file:
+    path: "{{ mountpoint }}"
+    state: directory
+    owner: "{{ username }}"
+    group: "{{ groupname }}"
+
+ - name: Create Mount
+   mount:
+    path: "{{ mountpoint }}"
+    src: "/dev/mapper/{{ vgname }}-{{ lvname }}"
+    fstype: xfs
+    state: mounted
+    opts: "{{ fstab_opts }}"
+
+ - name: Update Ownership of Mountpoint
+   file:
+    path: "{{ mountpoint }}"
+    state: directory
+    group: "{{ username }}"
+    owner: "{{ groupname }}"
