@@ -1,0 +1,39 @@
+---
+###############################################################################################
+##usage: ansible-playbook VMHOSTinfo.yml -e "inputfile=sample_vmlist outputfile=/tmp/results" #
+## Created By: Dheeraj Mathur                                                                 #
+## Created On: 10 Sep 2020                                                                    #
+## Version: 1.0                                                                               #
+###############################################################################################
+
+- name: This playbook will fetch esxi host of VM
+  hosts: localhost
+  gather_facts: no
+  vars_prompt:
+    - name: "vcenter"
+      prompt: "Please Key-in Vcenter FQDN: "
+      private: no
+    - name: "user"
+      prompt: "Please key-in your LAN-ID(Without Domain): "
+      private: no
+    - name: "pass"
+      prompt: "Please key-in your LAN-ID password: "
+      unsafe: yes
+      private: yes
+#  vars_files: /opt/ansible/playbook/vcenter_vars.yml
+  vars:
+    - validate_certs: no
+    - debug_flag: no
+    - vcenter_server: "{{ vcenter }}"
+    - vcenter_user: "{{ user + '@sgxdo.sgx.com' }}"
+    - vcenter_pass: "{{ pass }}"
+
+  vars_files:
+    - "{{ varfile }}"
+    - "{{ outputfile }}"
+  tasks:
+   - name: Calling getexsihost.yml
+     include_tasks: getexsihost.yml
+     loop: "{{ VMlist }}"
+     loop_control:
+       loop_var: vmname
