@@ -15,10 +15,10 @@
       prompt: "Please Key-in Vcenter FQDN: "
       private: no
     - name: "user"
-      prompt: "Please key-in your LAN-ID: "
+      prompt: "Please key-in your LOGIN ID: "
       private: no
     - name: "pass"
-      prompt: "Please key-in your LAN-ID password: "
+      prompt: "Please key-in your password: "
       unsafe: yes
       private: yes
 #  vars_files: /opt/ansible/playbook/vcenter_vars.yml
