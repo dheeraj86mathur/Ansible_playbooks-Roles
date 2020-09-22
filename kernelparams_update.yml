@@ -5,4 +5,4 @@
      value: "{{ item.value }}"
      state: present
    loop:
-     - { name: "{{ param_name }}", value: "{{ param_value }}"  }
+     - { name: "{{ param_name }}", value: "{{ param_value }}" }
