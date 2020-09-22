@@ -1,0 +1,57 @@
+---
+###############################################################################################
+## Name: bond_setup.yml                                                                       #
+## Purpose: Create multiple Linux network bonds on multiple servers.                          #
+## Usage with Mandatory minimal Options only:                                                 #
+## ansible-playbook bond_setup.yml -e "target=<TARGET_Server/Group>"                          #
+## Sample variable : sample_niclist_host_vars. These variable values need to be defined in    #
+## in host_vars of each server or they need to come from some dynamic inventory metadata      # 
+## This playbook will change change interface names                                           #
+## Task file : bonding_tasks.yml                                                              #
+## template files : bond.j2, NIC1.j2 and NIC2.j2                                              #
+## Created By: Dheeraj Mathur                                                                 #
+## Created On: 31st Aug 2020                                                                  #
+## Version: 1.0                                                                               #
+###############################################################################################
+
+ - name: bonds creation
+   hosts: "{{ target }}"
+   gather_facts: yes
+#   vars_files: "{{ varfile }}"
+   tasks:
+     - name: find all pre-existing ifcfg-ens* file
+       find:
+         paths: /etc/sysconfig/network-scripts/
+         file_type: file
+         patterns: ['ifcfg-ens*']
+       register: files_to_delete
+     - name: list the files to cleanup
+       debug:
+         msg: "{{ item.path }}"
+       loop: "{{ files_to_delete.files | flatten(1) }}"
+     - name: cleanup all pre-existing ifcfg-ens* file
+       file:
+         name: "{{ item.path }}"
+         state: absent
+       loop: "{{ files_to_delete.files | flatten(1) }}"
+       
+     - name: Calling the Task to create multiple bonds
+       include_tasks:
+         file: bonding_tasks.yml
+       vars:
+         BONDDEV: "{{ bond_item }}"
+         NIC1: "{{ BONDS[bond_item]['NIC1'] }}"
+         MAC1: "{{ BONDS[bond_item]['MAC1'] }}"
+         NIC2: "{{ BONDS[bond_item]['NIC2'] }}"
+         MAC2: "{{ BONDS[bond_item]['MAC2'] }}"
+         NETM: "{{ BONDS[bond_item]['NETM'] }}"
+         IP: "{{ BONDS[bond_item]['IP'] }}"
+       loop: "{{ BONDS.keys()|flatten(levels=1) }}"
+       loop_control:
+         loop_var: bond_item
+
+     - name: create /etc/sysconfig/network file with new bond device
+       template:
+         src: network.j2
+         dest: /etc/sysconfig/network
+         backup: yes
