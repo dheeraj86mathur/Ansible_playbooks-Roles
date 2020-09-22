@@ -1,0 +1,11 @@
+---
+ - name: create bond and nic files from template
+   template:
+     src: "{{ item.src }}"
+     dest: "{{ item.dest }}"
+     backup: yes
+   loop:
+     - { src: bond.j2, dest: "/etc/sysconfig/network-scripts/ifcfg-{{ BONDDEV }}" }
+     - { src: NIC1.j2, dest: "/etc/sysconfig/network-scripts/ifcfg-{{ NIC1 }}" }
+     - { src: NIC2.j2, dest: "/etc/sysconfig/network-scripts/ifcfg-{{ NIC2 }}" }
+     - { src: network.j2, dest: /etc/sysconfig/network }
