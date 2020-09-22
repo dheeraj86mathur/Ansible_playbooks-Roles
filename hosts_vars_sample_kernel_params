@@ -1,0 +1,11 @@
+---
+KERNELPARAMS:
+  param1:
+    param_name: vm.swappiness
+    param_value: 1
+  param2:
+    param_name: net.core.rmem_max
+    param_value: 2097152
+  param3:
+    param_name: net.core.wmem_max
+    param_value: 2097152
