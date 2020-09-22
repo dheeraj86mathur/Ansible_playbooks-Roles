@@ -1,0 +1,18 @@
+---
+GWIP: "{{ GW_IP }}"
+GWNIC: "{{ GW_NIC }}"
+BONDS:
+  bond1:
+    NIC1: "{{ bond1_nic1 }}"
+    MAC1: "{{ bond1_nic1_mac1 }}"
+    NIC2: "{{ bond1_nic2 }}"
+    MAC2: "{{ bond1_nic2_mac2 }}"
+    IP: "{{ bond1_ip }}"
+    NETM: "{{ bond1_netm }}"
+  bond0:
+    NIC1: "{{ bond0_nic1 }}"
+    MAC1: "{{ bond0_nic1_mac1 }}"
+    NIC2: "{{ bond0_nic2 }}"
+    MAC2: "{{ bond0_nic2_mac2 }}"
+    IP: "{{ bond0_ip }}"
+    NETM: "{{ bond0_netm }}"
