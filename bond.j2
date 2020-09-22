@@ -1,0 +1,9 @@
+NAME={{ BONDDEV }}
+DEVICE={{ BONDDEV }}
+IPADDR={{ IP }}
+NETMASK={{ NETM }}
+BONDING_OPTS="miimon=100 mode=1 primary={{ NIC1 }} fail_over_mac=active"
+BOOTPROTO=none
+ONBOOT=yes
+TYPE=Bond
+BONDING_MASTER=yes
