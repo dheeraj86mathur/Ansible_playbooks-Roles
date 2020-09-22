@@ -1,0 +1,22 @@
+---
+###############################################################################################
+## Name: kernel_params_main.yml                                                               #
+## Purpose: Playbook to update multiple kernel params on multiple linux servers               #
+## Usage with Mandatory minimal Options only:                                                 #
+## ansible-playbook kernel_params_main.yml -e "target=<TARGET_Server/Group>"                  #
+## Created By: Dheeraj Mathur                                                                 #
+## Created On: 22 Sep 2020                                                                    #
+## Version: 1.0                                                                               #
+###############################################################################################
+- name: Update kernel parameters
+  hosts: "{{ target }}"
+  tasks: 
+    - name: Calling the task file kernelparams_update.yml
+      include_tasks:
+       file: kernelparams_update.yml
+      vars:
+       param_name: "{{ KERNELPARAMS[param_item]['param_name'] }}"
+       param_value: "{{ KERNELPARAMS[param_item]['param_value'] }}"
+      loop: "{{ KERNELPARAMS.keys()|flatten(levels=1) }}"
+      loop_control:
+       loop_var: param_item 
