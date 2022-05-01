@@ -1,7 +1,7 @@
 ---
 ###############################################################################################
 ## Name: bond_setup.yml                                                                       #
-## Purpose: Create multiple Linux network bonds on multiple servers.                          #
+## Purpose: Create multiple Linux network bonds on multiple servers while supressing NetworkManager and using traditional network-scripts.                          #
 ## Usage with Mandatory minimal Options only:                                                 #
 ## ansible-playbook bond_setup.yml -e "target=<TARGET_Server/Group>"                          #
 ## Sample variable : sample_niclist_host_vars. These variable values need to be defined in    #
