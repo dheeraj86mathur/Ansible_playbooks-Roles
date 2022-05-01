@@ -1,0 +1,35 @@
+####Description: This playbook will fetch cpu and memory information from all RHEL servers in playbooks/tempouts/diskinfo_"hostname" file to controller server.
+#####Usage: ansible-playbook serverinfo.yml -e "target=XXX"
+---
+- name: Playbook to get the memory and cpu information from target nodes
+  hosts: "{{ target }}"
+  tasks:
+    - name: Clear existing output file for same VM
+      file:
+        name: "{{ item.name }}"
+        state: "{{ item.state }}"
+      loop:
+        - { name: 'tempouts', state: directory }
+        - { name: "tempouts/serverinfo_{{ ansible_hostname }}", state: absent }
+      delegate_to: localhost
+      tags:
+       - cleanup
+
+    - name: Create serverinfo file for a each server.
+      lineinfile:
+        path: "tempouts/serverinfo_{{ ansible_hostname }}"
+        line: "{{ ansible_hostname }}, {{ ansible_processor_cores }}, {{ ansible_processor_count }}, {{ ansible_processor_threads_per_core }}, {{ ansible_processor_vcpus }}, {{ ansible_memtotal_mb }}, {{ ansible_all_ipv4_addresses }}, {{ ansible_default_ipv4.address }}, {{ ansible_default_ipv4.interface }}, {{ ansible_default_ipv4.macaddress }} "
+        create: yes
+      delegate_to: localhost
+      tags:
+       - serverfacts_to_file
+     
+    - name: Add Header to each file 
+      lineinfile: 
+        path: "tempouts/serverinfo_{{ ansible_hostname }}"
+        line: "### hostname, no. of cores, no. of processors, no. of threads per core, no. of vcpus, total memory(in MB), All IPs, DataIP, DATA NIC, DATA MAC ###"
+        insertbefore: BOF
+      delegate_to: localhost
+      tags: 
+       - Add_header
+       - serverfacts_to_file
